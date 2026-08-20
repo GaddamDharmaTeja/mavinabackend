@@ -1,0 +1,12 @@
+import http from "node:http";
+import next from "next";
+import nextEnv from "@next/env";
+import app from "./server/app";
+nextEnv.loadEnvConfig(process.cwd());
+const dev = process.env.NODE_ENV !== "production";
+const host = process.env.HOST || "0.0.0.0";
+const port = Number(process.env.PORT || 3000);
+const nextApp = next({ dev, hostname: host, port });
+await nextApp.prepare();
+app.all(/.*/, (req, res) => nextApp.getRequestHandler()(req, res));
+http.createServer(app).listen(port, host, () => console.log(`Mavinamane listening on ${host}:${port}`));
