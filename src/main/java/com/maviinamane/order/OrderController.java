@@ -3,6 +3,7 @@ import com.maviinamane.product.Product;
 import com.maviinamane.product.ProductRepository;
 import com.maviinamane.marketplace.DeliveryService;
 import com.maviinamane.marketplace.NotificationService;
+import com.maviinamane.delivery.DeliveryChargeService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -21,14 +22,16 @@ public class OrderController {
     private final ProductRepository products;
     private final DeliveryService delivery;
     private final NotificationService notifications;
+    private final DeliveryChargeService deliveryCharges;
 
     public OrderController(
             OrderRepository repository,
-            ProductRepository products, DeliveryService delivery, NotificationService notifications) {
+            ProductRepository products, DeliveryService delivery, NotificationService notifications, DeliveryChargeService deliveryCharges) {
         this.repository = repository;
         this.products = products;
         this.delivery = delivery;
         this.notifications = notifications;
+        this.deliveryCharges = deliveryCharges;
     }
 
     @GetMapping("/{orderNumber}")
@@ -91,8 +94,23 @@ public class OrderController {
                             .multiply(BigDecimal.valueOf(item.getQuantity())));
         }
 
+        if (order.getPaymentMethod() != null && !"COD".equalsIgnoreCase(order.getPaymentMethod())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only Cash on Delivery is supported");
+        }
+        BigDecimal distanceKm = order.getDistanceKm();
+        if (distanceKm == null) distanceKm = BigDecimal.ZERO;
+        BigDecimal weightKg = BigDecimal.ZERO;
+        for (Order.OrderItem item : order.getItems()) {
+            Product product = products.findById(item.getProductId()).orElseThrow();
+            weightKg = weightKg.add(parseWeightKg(product.getWeight()).multiply(BigDecimal.valueOf(item.getQuantity())));
+        }
+        var charge = deliveryCharges.calculate(distanceKm, weightKg);
+        order.setDistanceKm(distanceKm); order.setTotalWeightKg(weightKg);
+        order.setDistanceCharge(charge.distanceCharge()); order.setWeightCharge(charge.weightCharge()); order.setDeliveryCharge(charge.deliveryCharge());
+        order.setPaymentMethod("COD");
         order.setTotal(total);
-        if (order.getPincode() != null && !order.getPincode().isBlank()) { var quote=delivery.quote(order.getPincode(),total); order.setDeliveryZone(quote.zone()); order.setDeliveryFee(quote.fee()); order.setEstimatedDeliveryDays(quote.days()); total=total.add(quote.fee()); }
+        if (order.getPincode() != null && !order.getPincode().isBlank()) { var quote=delivery.quote(order.getPincode(),total); order.setDeliveryZone(quote.zone()); order.setDeliveryFee(quote.fee()); order.setEstimatedDeliveryDays(quote.days()); }
+        total = total.add(charge.deliveryCharge());
         order.setTotal(total);
         order.setOrderNumber(
                 "ORD" + ThreadLocalRandom.current().nextInt(100000, 999999));
@@ -105,6 +123,16 @@ public class OrderController {
         Order saved = repository.save(order);
         notifications.send(saved.getEmail(), "ORDER", "Order placed", "Your order #" + saved.getOrderNumber() + " has been placed and will be prepared shortly.");
         return saved;
+    }
+
+    private BigDecimal parseWeightKg(String value) {
+        if (value == null || value.isBlank()) return BigDecimal.ZERO;
+        try {
+            String number = value.trim().replace(",", ".").replaceAll("[^0-9.]+", "");
+            if (number.isBlank()) return BigDecimal.ZERO;
+            BigDecimal parsed = new BigDecimal(number);
+            return value.toLowerCase().contains("g") && !value.toLowerCase().contains("kg") ? parsed.divide(BigDecimal.valueOf(1000)) : parsed;
+        } catch (NumberFormatException ex) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid product weight"); }
     }
 
     @PostMapping("/{orderNumber}/payment")

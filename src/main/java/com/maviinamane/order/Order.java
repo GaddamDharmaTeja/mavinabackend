@@ -19,6 +19,11 @@ public class Order {
     private String pincode;
     private String deliveryZone;
     private BigDecimal deliveryFee = BigDecimal.ZERO;
+    private BigDecimal distanceKm;
+    private BigDecimal totalWeightKg;
+    private BigDecimal distanceCharge = BigDecimal.ZERO;
+    private BigDecimal weightCharge = BigDecimal.ZERO;
+    private BigDecimal deliveryCharge = BigDecimal.ZERO;
     private int estimatedDeliveryDays;
     private Double latitude;
     private Double longitude;
@@ -129,6 +134,11 @@ public class Order {
     public String getPincode(){return pincode;} public void setPincode(String v){pincode=v;}
     public String getDeliveryZone(){return deliveryZone;} public void setDeliveryZone(String v){deliveryZone=v;}
     public BigDecimal getDeliveryFee(){return deliveryFee;} public void setDeliveryFee(BigDecimal v){deliveryFee=v;}
+    public BigDecimal getDistanceKm(){return distanceKm;} public void setDistanceKm(BigDecimal v){distanceKm=v;}
+    public BigDecimal getTotalWeightKg(){return totalWeightKg;} public void setTotalWeightKg(BigDecimal v){totalWeightKg=v;}
+    public BigDecimal getDistanceCharge(){return distanceCharge;} public void setDistanceCharge(BigDecimal v){distanceCharge=v;}
+    public BigDecimal getWeightCharge(){return weightCharge;} public void setWeightCharge(BigDecimal v){weightCharge=v;}
+    public BigDecimal getDeliveryCharge(){return deliveryCharge;} public void setDeliveryCharge(BigDecimal v){deliveryCharge=v;}
     public int getEstimatedDeliveryDays(){return estimatedDeliveryDays;} public void setEstimatedDeliveryDays(int v){estimatedDeliveryDays=v;}
     public Double getLatitude(){return latitude;} public void setLatitude(Double v){latitude=v;}
     public Double getLongitude(){return longitude;} public void setLongitude(Double v){longitude=v;}
