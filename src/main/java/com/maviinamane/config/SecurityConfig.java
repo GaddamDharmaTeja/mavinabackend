@@ -183,6 +183,7 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(
                 Arrays.stream(corsOrigins.split(","))
                         .map(String::trim)
+                        .filter(origin -> !origin.isBlank())
                         .toList());
 
         config.setAllowedMethods(List.of(
