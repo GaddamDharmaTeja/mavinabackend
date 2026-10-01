@@ -30,6 +30,7 @@ public class Order {
 
     private String status = "PENDING";
     private String paymentStatus = "PENDING";
+    private boolean archived = false;
     private String paymentMethod;
     private String transactionId;
 
@@ -70,6 +71,7 @@ public class Order {
             return quantity;
         }
 
+        
         public void setQuantity(int quantity) {
             this.quantity = quantity;
         }
@@ -152,6 +154,13 @@ public class Order {
         this.status = status;
     }
 
+    public boolean isArchived() {
+    return archived;
+    }
+
+    public void setArchived(boolean archived) {
+        this.archived = archived;
+    }
     public String getPaymentStatus() {
         return paymentStatus;
     }

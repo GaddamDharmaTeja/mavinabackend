@@ -4,9 +4,14 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class ProductService {
+
+    private static final Logger log = LoggerFactory.getLogger(ProductService.class);
+
 
     private final ProductRepository repository;
 
@@ -14,19 +19,25 @@ public class ProductService {
         this.repository = repository;
     }
 
-    public List<Product> findAll(String variety, BigDecimal maxPrice) {
-        return repository.findByActiveTrue()
-                .stream()
-                .filter(Product::isAvailable)
-                .filter(product ->
-                        variety == null
-                                || variety.isBlank()
-                                || product.getVariety().equalsIgnoreCase(variety))
-                .filter(product ->
-                        maxPrice == null
-                                || product.getPrice().compareTo(maxPrice) <= 0)
-                .toList();
-    }
+   public List<Product> findAll(String variety, BigDecimal maxPrice) {
+
+    List<Product> products = repository.findByActiveTrue()
+            .stream()
+            .filter(Product::isAvailable)
+            .filter(product ->
+                    variety == null
+                            || variety.isBlank()
+                            || product.getVariety().equalsIgnoreCase(variety))
+            .filter(product ->
+                    maxPrice == null
+                            || product.getPrice().compareTo(maxPrice) <= 0)
+            .toList();
+
+    log.info("Found {} products matching criteria: variety={}, maxPrice={}",
+            products.size(), variety, maxPrice);
+
+    return products;
+}
 
     public Product findById(String id) {
         return repository.findById(id)

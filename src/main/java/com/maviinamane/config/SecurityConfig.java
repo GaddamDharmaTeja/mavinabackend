@@ -154,6 +154,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
 
+                        .requestMatchers("/api/payment/admin/**")
+                        .hasRole("ADMIN")
+
                         .requestMatchers("/api/orders/mine")
                         .hasRole("CUSTOMER")
 
